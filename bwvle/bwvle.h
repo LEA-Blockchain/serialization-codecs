@@ -6,8 +6,8 @@
 #ifndef BWVLE_H
 #define BWVLE_H
 
-#include <stdint.h>
 #include <stddef.h>
+#include <stdint.h>
 
 /**
  * Define BWVLE_NO_BUILTIN_CLZ to disable GCC/Clang CLZ intrinsics.
@@ -55,12 +55,8 @@ int bwvle_encode_scalar(bwvle_encoder_t *enc, uint64_t value);
 int bwvle_encode_bytes(bwvle_encoder_t *enc, const uint8_t *data, uint64_t length);
 size_t bwvle_encoder_finish(bwvle_encoder_t *enc);
 int bwvle_encoder_get_error(const bwvle_encoder_t *enc);
-void bwvle_decoder_init(bwvle_decoder_t *dec,
-                        const uint8_t *buffer,
-                        size_t buffer_size,
-                        bwvle_scalar_callback_t scalar_cb,
-                        bwvle_bytes_callback_t bytes_cb,
-                        void *user_data);
+void bwvle_decoder_init(bwvle_decoder_t *dec, const uint8_t *buffer, size_t buffer_size,
+                        bwvle_scalar_callback_t scalar_cb, bwvle_bytes_callback_t bytes_cb, void *user_data);
 int bwvle_decode(bwvle_decoder_t *dec);
 int bwvle_decoder_get_error(const bwvle_decoder_t *dec);
 

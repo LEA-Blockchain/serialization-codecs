@@ -4,11 +4,11 @@
  * Project: LEA Project (getlea.org)
  */
 #include "bwvle.h"
+#include <assert.h>
+#include <limits.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <assert.h>
-#include <limits.h>
 
 #define MAX_TEST_ITEMS 20
 #if BWVLE_MAX_SEQUENCE_LEN > 0
@@ -108,11 +108,8 @@ void reset_decoder_test_state()
 }
 
 #define RUN_TEST_BUFFER_SIZE (BWVLE_MAX_SEQUENCE_LEN > 200 ? (BWVLE_MAX_SEQUENCE_LEN + 200) : 400)
-void run_test(const char *test_name,
-              void (*encode_func)(bwvle_encoder_t *),
-              size_t expected_item_count,
-              const decoded_item_t *expected_items,
-              int expect_decode_error_code)
+void run_test(const char *test_name, void (*encode_func)(bwvle_encoder_t *), size_t expected_item_count,
+              const decoded_item_t *expected_items, int expect_decode_error_code)
 {
     printf("--- Running Test: %s ---\n", test_name);
     reset_decoder_test_state();
@@ -164,7 +161,8 @@ void run_test(const char *test_name,
         printf("  Skipping decode as 0 bytes were written.\n");
     }
 
-    printf("  Decode Result: %d, Decoder Error Code: %d (Expected Error: %d)\n", decode_result, decode_error, expect_decode_error_code);
+    printf("  Decode Result: %d, Decoder Error Code: %d (Expected Error: %d)\n", decode_result, decode_error,
+           expect_decode_error_code);
 
     assert(decode_error == expect_decode_error_code);
     if (expect_decode_error_code == BWVLE_SUCCESS)
@@ -186,9 +184,11 @@ void run_test(const char *test_name,
                 {
                     if (expected_items[i].bytes_length > SIZE_MAX)
                         assert(0);
-                    if (decoded_items[i].bytes_length <= MAX_BYTE_SEQ_LEN && expected_items[i].bytes_length <= MAX_BYTE_SEQ_LEN)
+                    if (decoded_items[i].bytes_length <= MAX_BYTE_SEQ_LEN &&
+                        expected_items[i].bytes_length <= MAX_BYTE_SEQ_LEN)
                     {
-                        assert(memcmp(decoded_items[i].bytes_value, expected_items[i].bytes_value, (size_t)expected_items[i].bytes_length) == 0);
+                        assert(memcmp(decoded_items[i].bytes_value, expected_items[i].bytes_value,
+                                      (size_t)expected_items[i].bytes_length) == 0);
                     }
                     else
                     {
@@ -208,12 +208,30 @@ void run_test(const char *test_name,
     free(buffer);
 }
 
-void encode_scalar_0(bwvle_encoder_t *enc) { bwvle_encode_scalar(enc, 0); }
-void encode_scalar_1(bwvle_encoder_t *enc) { bwvle_encode_scalar(enc, 1); }
-void encode_scalar_4(bwvle_encoder_t *enc) { bwvle_encode_scalar(enc, 4); }
-void encode_scalar_2231(bwvle_encoder_t *enc) { bwvle_encode_scalar(enc, 2231); }
-void encode_scalar_large(bwvle_encoder_t *enc) { bwvle_encode_scalar(enc, 0x123456789ABCDEF0ULL); }
-void encode_bytes_empty(bwvle_encoder_t *enc) { bwvle_encode_bytes(enc, NULL, 0); }
+void encode_scalar_0(bwvle_encoder_t *enc)
+{
+    bwvle_encode_scalar(enc, 0);
+}
+void encode_scalar_1(bwvle_encoder_t *enc)
+{
+    bwvle_encode_scalar(enc, 1);
+}
+void encode_scalar_4(bwvle_encoder_t *enc)
+{
+    bwvle_encode_scalar(enc, 4);
+}
+void encode_scalar_2231(bwvle_encoder_t *enc)
+{
+    bwvle_encode_scalar(enc, 2231);
+}
+void encode_scalar_large(bwvle_encoder_t *enc)
+{
+    bwvle_encode_scalar(enc, 0x123456789ABCDEF0ULL);
+}
+void encode_bytes_empty(bwvle_encoder_t *enc)
+{
+    bwvle_encode_bytes(enc, NULL, 0);
+}
 void encode_bytes_cafe(bwvle_encoder_t *enc)
 {
     uint8_t d[] = {0xCA, 0xFE};
@@ -303,11 +321,15 @@ int main()
     run_test("Bytes Empty", encode_bytes_empty, 1, expected_empty, BWVLE_SUCCESS);
     decoded_item_t expected_cafe[] = {{.type = ITEM_BYTES, .bytes_length = 2, .bytes_value = {0xCA, 0xFE}}};
     run_test("Bytes CAFE", encode_bytes_cafe, 1, expected_cafe, BWVLE_SUCCESS);
-    decoded_item_t expected_hello[] = {{.type = ITEM_BYTES, .bytes_length = 5, .bytes_value = {'H', 'e', 'l', 'l', 'o'}}};
+    decoded_item_t expected_hello[] = {
+        {.type = ITEM_BYTES, .bytes_length = 5, .bytes_value = {'H', 'e', 'l', 'l', 'o'}}};
     run_test("Bytes Hello", encode_bytes_hello, 1, expected_hello, BWVLE_SUCCESS);
-    decoded_item_t expected_mixed[] = {{.type = ITEM_SCALAR, .scalar_value = 10}, {.type = ITEM_BYTES, .bytes_length = 3, .bytes_value = {1, 2, 3}}, {.type = ITEM_SCALAR, .scalar_value = 0}};
+    decoded_item_t expected_mixed[] = {{.type = ITEM_SCALAR, .scalar_value = 10},
+                                       {.type = ITEM_BYTES, .bytes_length = 3, .bytes_value = {1, 2, 3}},
+                                       {.type = ITEM_SCALAR, .scalar_value = 0}};
     run_test("Mixed Sequence 1", encode_mixed_1, 3, expected_mixed, BWVLE_SUCCESS);
-    decoded_item_t expected_padding[] = {{.type = ITEM_SCALAR, .scalar_value = 4}, {.type = ITEM_SCALAR, .scalar_value = 1}};
+    decoded_item_t expected_padding[] = {{.type = ITEM_SCALAR, .scalar_value = 4},
+                                         {.type = ITEM_SCALAR, .scalar_value = 1}};
     run_test("Sequence Needing Padding", encode_sequence_causes_padding, 2, expected_padding, BWVLE_SUCCESS);
 
     printf("\n--- Standard Error Handling Tests ---\n");
@@ -348,8 +370,8 @@ int main()
         uint64_t too_long = BWVLE_MAX_SEQUENCE_LEN + 1;
         int enc_res = bwvle_encode_bytes(&enc, dummy_data, too_long);
         int enc_err = bwvle_encoder_get_error(&enc);
-        printf("  Encode Result: %d, Error Code: %d (Expected Error: %d)\n",
-               enc_res, enc_err, BWVLE_ERROR_LENGTH_LIMIT_EXCEEDED);
+        printf("  Encode Result: %d, Error Code: %d (Expected Error: %d)\n", enc_res, enc_err,
+               BWVLE_ERROR_LENGTH_LIMIT_EXCEEDED);
         assert(enc_res == BWVLE_ERROR_LENGTH_LIMIT_EXCEEDED);
         assert(enc_err == BWVLE_ERROR_LENGTH_LIMIT_EXCEEDED);
         printf("  Test PASSED (Expected Error %d)\n\n", BWVLE_ERROR_LENGTH_LIMIT_EXCEEDED);
@@ -385,7 +407,8 @@ int main()
         bwvle_decoder_init(&dec, decode_buf, bytes, test_scalar_cb, test_bytes_cb, NULL);
         int dec_res = bwvle_decode(&dec);
         int dec_err = bwvle_decoder_get_error(&dec);
-        printf("  Decode Result: %d, Error Code: %d (Expected Error: %d)\n", dec_res, dec_err, BWVLE_ERROR_LENGTH_LIMIT_EXCEEDED);
+        printf("  Decode Result: %d, Error Code: %d (Expected Error: %d)\n", dec_res, dec_err,
+               BWVLE_ERROR_LENGTH_LIMIT_EXCEEDED);
         assert(dec_err == BWVLE_ERROR_LENGTH_LIMIT_EXCEEDED);
         assert(dec_res != BWVLE_SUCCESS);
         assert(decoded_count == 0);
@@ -430,7 +453,8 @@ int main()
         bwvle_decoder_init(&dec, decode_buf, bytes, test_scalar_cb, test_bytes_cb, NULL);
         int dec_res = bwvle_decode(&dec);
         int dec_err = bwvle_decoder_get_error(&dec);
-        printf("  Decode Result: %d, Error Code: %d (Expected Error: %d)\n", dec_res, dec_err, BWVLE_ERROR_INVALID_DATA);
+        printf("  Decode Result: %d, Error Code: %d (Expected Error: %d)\n", dec_res, dec_err,
+               BWVLE_ERROR_INVALID_DATA);
         assert(dec_err == BWVLE_ERROR_INVALID_DATA);
         assert(dec_res != BWVLE_SUCCESS);
         printf("  Test PASSED (Expected Error %d)\n\n", BWVLE_ERROR_INVALID_DATA);
@@ -447,7 +471,8 @@ int main()
         bwvle_decoder_init(&dec, decode_buf, bytes, test_scalar_cb, test_bytes_cb, NULL);
         int dec_res = bwvle_decode(&dec);
         int dec_err = bwvle_decoder_get_error(&dec);
-        printf("  Decode Result: %d, Error Code: %d (Expected Error: %d or %d)\n", dec_res, dec_err, BWVLE_ERROR_INVALID_DATA, BWVLE_ERROR_BUFFER_OVERFLOW);
+        printf("  Decode Result: %d, Error Code: %d (Expected Error: %d or %d)\n", dec_res, dec_err,
+               BWVLE_ERROR_INVALID_DATA, BWVLE_ERROR_BUFFER_OVERFLOW);
         assert(dec_err == BWVLE_ERROR_INVALID_DATA || dec_err == BWVLE_ERROR_BUFFER_OVERFLOW);
         assert(dec_res != BWVLE_SUCCESS);
         printf("  Test PASSED (Expected Error %d or %d)\n\n", BWVLE_ERROR_INVALID_DATA, BWVLE_ERROR_BUFFER_OVERFLOW);
@@ -464,7 +489,8 @@ int main()
         bwvle_decoder_init(&dec, decode_buf, bytes, test_scalar_cb, test_bytes_cb, NULL);
         int dec_res = bwvle_decode(&dec);
         int dec_err = bwvle_decoder_get_error(&dec);
-        printf("  Decode Result: %d, Error Code: %d (Expected Error: %d)\n", dec_res, dec_err, BWVLE_ERROR_INVALID_DATA);
+        printf("  Decode Result: %d, Error Code: %d (Expected Error: %d)\n", dec_res, dec_err,
+               BWVLE_ERROR_INVALID_DATA);
         assert(dec_err == BWVLE_ERROR_INVALID_DATA);
         assert(dec_res != BWVLE_SUCCESS);
         printf("  Test PASSED (Expected Error %d)\n\n", BWVLE_ERROR_INVALID_DATA);
@@ -563,7 +589,8 @@ int main()
         bwvle_decoder_init(&dec, decode_buf, bytes, test_scalar_cb, test_bytes_cb, NULL);
         int dec_res = bwvle_decode(&dec);
         int dec_err = bwvle_decoder_get_error(&dec);
-        printf("  Decode Result: %d, Error Code: %d (Expected Error: %d)\n", dec_res, dec_err, BWVLE_ERROR_LENGTH_LIMIT_EXCEEDED);
+        printf("  Decode Result: %d, Error Code: %d (Expected Error: %d)\n", dec_res, dec_err,
+               BWVLE_ERROR_LENGTH_LIMIT_EXCEEDED);
         assert(dec_err == BWVLE_ERROR_LENGTH_LIMIT_EXCEEDED);
         assert(dec_res != BWVLE_SUCCESS);
         assert(decoded_count == 0);
