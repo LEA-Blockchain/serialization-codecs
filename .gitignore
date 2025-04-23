@@ -1,4 +1,4 @@
 **/*.o
-**/text
+**/test
 .editorconfig
 .vscode/
