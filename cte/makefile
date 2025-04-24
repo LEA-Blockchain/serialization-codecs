@@ -1,28 +1,57 @@
-CC = gcc
+CC = clang
 
-CFLAGS = -std=c99 -Wall -Wextra -pedantic
+CFLAGS = -Os
 
-LDFLAGS =
+WASM_FLAGS = --target=wasm32 -nostdlib -ffreestanding -Wl,--no-entry
 
-SRCS = cte.c test.c
+WASM_DEFINES = -DLEA_ENV
 
-OBJS = $(SRCS:.c=.o)
+WASM_VM_EXTRA_FLAGS = -mnontrapping-fptoint -mbulk-memory -msign-ext -msimd128 -mtail-call -mreference-types -matomics -mmultivalue -Xclang -target-abi -Xclang experimental-mv
 
-EXEC = test
+MVP_CFLAGS = $(shell pkg-config --cflags stdlea-mvp)
+MVP_LIBS = $(shell pkg-config --libs stdlea-mvp)
+VM_CFLAGS = $(shell pkg-config --cflags stdlea-vm)
+VM_LIBS = $(shell pkg-config --libs stdlea-vm)
+TEST_CFLAGS = $(shell pkg-config --cflags stdlea)
+TEST_LIBS = $(shell pkg-config --libs stdlea)
 
-all: $(EXEC)
+MVP_TARGET = cte.mvp.wasm
+VM_TARGET = cte.vm.wasm
+TEST_TARGET = test
 
-$(EXEC): $(OBJS)
-	$(CC) $(LDFLAGS) $(OBJS) -o $(EXEC)
+CTE_SRC = cte.c
+TEST_SRC = test.c
 
-%.o: %.c
-	$(CC) $(CFLAGS) -c $< -o $@
+.PHONY: all clean mvp vm test_target
 
-run: all
-	./$(EXEC)
+all: $(MVP_TARGET) $(VM_TARGET) $(TEST_TARGET)
+
+$(MVP_TARGET): $(CTE_SRC)
+	$(CC) $(WASM_FLAGS) $(CFLAGS) $(WASM_DEFINES) \
+	      $(MVP_CFLAGS) \
+	      $(CTE_SRC) \
+	      $(MVP_LIBS) \
+	      -o $@
+
+$(VM_TARGET): $(CTE_SRC)
+	$(CC) $(WASM_FLAGS) $(CFLAGS) $(WASM_VM_EXTRA_FLAGS) $(WASM_DEFINES) \
+	      $(VM_CFLAGS) \
+	      $(CTE_SRC) \
+	      $(VM_LIBS) \
+	      -o $@
+
+$(TEST_TARGET): $(TEST_SRC) $(CTE_SRC)
+	$(CC) $(CFLAGS) \
+	      $(TEST_CFLAGS) \
+	      $(TEST_SRC) $(CTE_SRC) \
+	      $(TEST_LIBS) \
+	      -o $@
+
+mvp: $(MVP_TARGET)
+
+vm: $(VM_TARGET)
+
+test_target: $(TEST_TARGET)
 
 clean:
-	@echo "Cleaning up..."
-	rm -f $(OBJS) $(EXEC)
-
-.PHONY: all run clean
+	rm -f $(MVP_TARGET) $(VM_TARGET) $(TEST_TARGET)
