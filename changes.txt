@@ -1,0 +1,202 @@
+diff --git a/.gitignore b/.gitignore
+index 20cf5d3..a252e76 100644
+--- a/.gitignore
++++ b/.gitignore
+@@ -2,3 +2,4 @@
+ **/test
+ .editorconfig
+ .vscode/
++tmp
+\ No newline at end of file
+diff --git a/cte/cte.c b/cte/cte.c
+index c3109a2..f872bd2 100644
+--- a/cte/cte.c
++++ b/cte/cte.c
+@@ -1,8 +1,25 @@
+ #include "cte.h"
++
++/*
++#if defined(__STDC_HOSTED__) && __STDC_HOSTED__ == 0
++#include <stdlea.h>
++#else
++#include <stddef.h>
++#include <stdint.h>
++#include <stdlib.h>
++#include <string.h>
++#endif
++*/
++#ifdef LEA_ENV
++#include <stdlea.h>
++#define IF_LEA_EXPORT(FUNC_NAME) LEA_EXPORT(FUNC_NAME)
++#else
+ #include <stddef.h>
+ #include <stdint.h>
+ #include <stdlib.h>
+ #include <string.h>
++#define IF_LEA_EXPORT(FUNC_NAME)
++#endif
+ 
+ typedef struct
+ {
+@@ -169,6 +186,7 @@ static int _cte_decode_next_field_internal(cte_decoder_state_t *state)
+     return result;
+ }
+ 
++IF_LEA_EXPORT(cte_encoder_new)
+ void *cte_encoder_new()
+ {
+     cte_encoder_state_t *state = (cte_encoder_state_t *)malloc(sizeof(cte_encoder_state_t));
+@@ -190,6 +208,7 @@ void *cte_encoder_new()
+     return (void *)state;
+ }
+ 
++IF_LEA_EXPORT(cte_encoder_prepare_public_key_list)
+ uintptr_t cte_encoder_prepare_public_key_list(void *handle, uint8_t key_count)
+ {
+     if (!handle)
+@@ -208,6 +227,7 @@ uintptr_t cte_encoder_prepare_public_key_list(void *handle, uint8_t key_count)
+     return write_start_offset;
+ }
+ 
++IF_LEA_EXPORT(cte_encoder_prepare_signature_list)
+ uintptr_t cte_encoder_prepare_signature_list(void *handle, uint8_t sig_count)
+ {
+     if (!handle)
+@@ -226,6 +246,7 @@ uintptr_t cte_encoder_prepare_signature_list(void *handle, uint8_t sig_count)
+     return write_start_offset;
+ }
+ 
++IF_LEA_EXPORT(cte_encoder_write_index_reference)
+ int cte_encoder_write_index_reference(void *handle, uint8_t index)
+ {
+     if (!handle)
+@@ -240,6 +261,7 @@ int cte_encoder_write_index_reference(void *handle, uint8_t index)
+     return CTE_SUCCESS;
+ }
+ 
++IF_LEA_EXPORT(cte_encoder_prepare_command_data)
+ uintptr_t cte_encoder_prepare_command_data(void *handle, size_t payload_len)
+ {
+     if (!handle)
+@@ -290,6 +312,7 @@ uintptr_t cte_encoder_prepare_command_data(void *handle, size_t payload_len)
+     return write_start_offset;
+ }
+ 
++IF_LEA_EXPORT(cte_encoder_get_buffer_ptr)
+ uintptr_t cte_encoder_get_buffer_ptr(void *handle)
+ {
+     if (!handle)
+@@ -300,6 +323,7 @@ uintptr_t cte_encoder_get_buffer_ptr(void *handle)
+     return (uintptr_t)state->buffer;
+ }
+ 
++IF_LEA_EXPORT(cte_encoder_get_buffer_size)
+ size_t cte_encoder_get_buffer_size(void *handle)
+ {
+     if (!handle)
+@@ -310,6 +334,7 @@ size_t cte_encoder_get_buffer_size(void *handle)
+     return state->current_offset;
+ }
+ 
++IF_LEA_EXPORT(cte_decoder_new)
+ void *cte_decoder_new()
+ {
+     cte_decoder_state_t *state = (cte_decoder_state_t *)malloc(sizeof(cte_decoder_state_t));
+@@ -320,6 +345,7 @@ void *cte_decoder_new()
+     return (void *)state;
+ }
+ 
++IF_LEA_EXPORT(cte_decoder_set_input_buffer)
+ int cte_decoder_set_input_buffer(void *handle, const uint8_t *buffer_ptr, size_t buffer_len)
+ {
+     if (!handle)
+@@ -342,6 +368,7 @@ int cte_decoder_set_input_buffer(void *handle, const uint8_t *buffer_ptr, size_t
+     return CTE_SUCCESS;
+ }
+ 
++IF_LEA_EXPORT(cte_decoder_advance)
+ int cte_decoder_advance(void *handle)
+ {
+     if (!handle)
+@@ -361,6 +388,7 @@ int cte_decoder_advance(void *handle)
+     return (int)state->last_decoded_field.type;
+ }
+ 
++IF_LEA_EXPORT(cte_decoder_get_index_value)
+ int64_t cte_decoder_get_index_value(void *handle)
+ {
+     if (!handle)
+@@ -374,6 +402,7 @@ int64_t cte_decoder_get_index_value(void *handle)
+     return -1;
+ }
+ 
++IF_LEA_EXPORT(cte_decoder_get_data_ptr)
+ uintptr_t cte_decoder_get_data_ptr(void *handle)
+ {
+     if (!handle)
+@@ -393,6 +422,7 @@ uintptr_t cte_decoder_get_data_ptr(void *handle)
+     }
+ }
+ 
++IF_LEA_EXPORT(cte_decoder_get_list_count)
+ int8_t cte_decoder_get_list_count(void *handle)
+ {
+     if (!handle)
+@@ -410,6 +440,7 @@ int8_t cte_decoder_get_list_count(void *handle)
+     }
+ }
+ 
++IF_LEA_EXPORT(cte_decoder_get_command_len)
+ size_t cte_decoder_get_command_len(void *handle)
+ {
+     if (!handle)
+@@ -421,4 +452,4 @@ size_t cte_decoder_get_command_len(void *handle)
+         return state->last_decoded_field.data.command.length;
+     }
+     return (size_t)-1;
+-}
+\ No newline at end of file
++}
+diff --git a/cte/cte.h b/cte/cte.h
+index ec8044c..88dea5a 100644
+--- a/cte/cte.h
++++ b/cte/cte.h
+@@ -1,8 +1,20 @@
+ #ifndef CTE_H
+ #define CTE_H
+ 
++/*
++#if defined(__STDC_HOSTED__) && __STDC_HOSTED__ == 0
++#include <stdlea.h>
++#else
+ #include <stddef.h>
+ #include <stdint.h>
++#endif
++*/
++#ifdef LEA_ENV
++#include <stdlea.h>
++#else
++#include <stddef.h>
++#include <stdint.h>
++#endif
+ 
+ #define CTE_VERSION_V1 0x01
+ #define MAX_CTE_SIZE 1232
+@@ -81,4 +93,4 @@ uintptr_t cte_decoder_get_data_ptr(void *handle);  // Returns pointer or 0 on er
+ int8_t cte_decoder_get_list_count(void *handle);   // Returns count (1-15) or -1 on error/wrong type
+ size_t cte_decoder_get_command_len(void *handle);  // Returns length or (size_t)-1 on error/wrong type
+ 
+-#endif // CTE_H
+\ No newline at end of file
++#endif // CTE_H
+diff --git a/cte/test.c b/cte/test.c
+index c6514a8..a34d51e 100644
+--- a/cte/test.c
++++ b/cte/test.c
+@@ -194,4 +194,4 @@ int main()
+ 
+     printf("\nTest Complete\n");
+     return 0;
+-}
+\ No newline at end of file
++}

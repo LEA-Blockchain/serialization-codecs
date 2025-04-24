@@ -1,8 +1,20 @@
 #ifndef CTE_H
 #define CTE_H
 
+/*
+#if defined(__STDC_HOSTED__) && __STDC_HOSTED__ == 0
+#include <stdlea.h>
+#else
 #include <stddef.h>
 #include <stdint.h>
+#endif
+*/
+#ifdef LEA_ENV
+#include <stdlea.h>
+#else
+#include <stddef.h>
+#include <stdint.h>
+#endif
 
 #define CTE_VERSION_V1 0x01
 #define MAX_CTE_SIZE 1232
