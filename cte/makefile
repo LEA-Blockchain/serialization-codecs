@@ -19,33 +19,33 @@ MVP_TARGET = cte.mvp.wasm
 VM_TARGET = cte.vm.wasm
 TEST_TARGET = test
 
-CTE_SRC = cte.c
+CTE_CORE_SRC = cte_core.c cte_pklist.c cte_siglist.c cte_ixdata.c cte_command.c
 TEST_SRC = test.c
 
 .PHONY: all clean mvp vm test_target
 
 all: $(MVP_TARGET) $(VM_TARGET) $(TEST_TARGET)
 
-$(MVP_TARGET): $(CTE_SRC)
+$(MVP_TARGET): $(CTE_CORE_SRC)
 	$(CC) $(WASM_FLAGS) $(CFLAGS) $(WASM_DEFINES) \
-	      $(MVP_CFLAGS) \
-	      $(CTE_SRC) \
-	      $(MVP_LIBS) \
-	      -o $@
+	$(MVP_CFLAGS) \
+	$(CTE_CORE_SRC) \
+	$(MVP_LIBS) \
+	-o $@
 
-$(VM_TARGET): $(CTE_SRC)
+$(VM_TARGET): $(CTE_CORE_SRC)
 	$(CC) $(WASM_FLAGS) $(CFLAGS) $(WASM_VM_EXTRA_FLAGS) $(WASM_DEFINES) \
-	      $(VM_CFLAGS) \
-	      $(CTE_SRC) \
-	      $(VM_LIBS) \
-	      -o $@
+	$(VM_CFLAGS) \
+	$(CTE_CORE_SRC) \
+	$(VM_LIBS) \
+	-o $@
 
-$(TEST_TARGET): $(TEST_SRC) $(CTE_SRC)
+$(TEST_TARGET): $(TEST_SRC) $(CTE_CORE_SRC)
 	$(CC) $(CFLAGS) \
-	      $(TEST_CFLAGS) \
-	      $(TEST_SRC) $(CTE_SRC) \
-	      $(TEST_LIBS) \
-	      -o $@
+	$(TEST_CFLAGS) \
+	$(TEST_SRC) $(CTE_CORE_SRC) \
+	$(TEST_LIBS) \
+	-o $@
 
 mvp: $(MVP_TARGET)
 
